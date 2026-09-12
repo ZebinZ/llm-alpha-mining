@@ -1,24 +1,32 @@
-# Project scope and status
+# Research scope and evidence
 
-**English** | [简体中文](project_scope.zh-CN.md) · [Back to README](../README.md)
+**English** | [简体中文](project_scope.zh-CN.md) · [README](../README.md)
 
-This is a compact public edition of an LLM-assisted automated factor research framework. It separates the reusable framework from the outputs of one research campaign. The framework includes candidate proposal and review, data and factor contracts, computation, temporal validation, portfolio and cost evaluation, and recoverable orchestration. Vendor configuration, actual factor catalogs, and platform records remain in the private research archive.
+## Research contribution
 
-## What this repository demonstrates
+This project explores LLM-assisted factor discovery as a controlled research process: structured hypotheses, deterministic computation, explicit data contracts, evaluation, and traceable artifacts. Its contribution is the implemented workflow and the treatment of research failure modes, including temporal leakage, invalid expressions, incorrect stock universes, missing observations, duplicate candidates, and interrupted execution.
 
-- Actual framework components and their portable synthetic tests.
-- An offline workflow from structured candidates to signal files, descriptive diagnostics, and SHA verification.
-- Engineering constraints for missing values, point-in-time stock universes, risk vetoes, budgets and retries, lineage, and checkpoint recovery.
-- Documentation of bulk recomputation and traceable research delivery in the original project.
+The original private research included a large candidate pool, snapshot-panel correction, recomputation of dependent factors, correlation screening, and preparation of platform upload files. Those operational milestones do not establish alpha. External platform results and final out-of-sample outcomes are separate evidence; this repository makes no claim about unconfirmed returns or successful deployment.
 
-## Research status
+## What a reader can verify
 
-Local recomputation and preparation of upload files are complete. External platform retesting and the current batch's final delivery await feedback from the project owner. The public edition does not include unconfirmed out-of-sample performance, and candidate counts are not evidence of effective factors. Closing this research phase does not automatically start a new mining campaign.
+| Claim | Public evidence | Boundary |
+| --- | --- | --- |
+| Model proposals obey structured protocols and deterministic review | Role, budget, retry, and veto tests | Live model quality is not measured by scripted responses |
+| Signals respect specified data and universe contracts | Factor, label, and point-in-time tests | Real input data needs separate validation |
+| The packaged example is reproducible | Seeded demo, scientific signature, artifact hashes | Synthetic correlations are not performance results |
+| Research components support temporal evaluation, costs, and recovery | Component tests and CI | The demo is not a full investment backtest |
 
-Future work can build on the existing interfaces to connect data and models or improve search and execution efficiency. Resumed research should use a new experiment identity, retain necessary lineage and contracts, and revalidate the runtime environment.
+## What is included
 
-## Publication
+- One installable framework package with discovery and research components.
+- A runnable synthetic example and functionally named tests.
+- Paired English and Chinese architecture and integration guides.
 
-[ZebinZ/llm-alpha-mining](https://github.com/ZebinZ/llm-alpha-mining) publishes framework source code, a synthetic example, and tests. Framework publication proceeds independently of platform retesting and final out-of-sample (OOS) delivery. Any research results added later must reflect completed verification.
+Vendor-specific panel builders, historical runtime supervisors, unused model-training pipelines, local caches, actual factor catalogs, platform receipts, and submission archives are excluded. The original project is retained privately for research continuity. A public checkout is sufficient for the example, but not for reproducing private-data experiments.
 
-No open-source license has been specified yet. Market data, the specific factor pool, platform records, and private research archives are kept locally and are outside this repository.
+## Publication and reuse
+
+The repository is a public source release. No open-source license has been specified yet. Data and third-party platform permissions are separate from source-code permissions.
+
+Further work can connect a real provider and data source or expand the demonstrated research path. New experiments should use new identities and output directories, retain provenance, and freeze evaluation decisions before consuming external results. Any performance claims added later should state the completed evaluation, sample period, selection procedure, costs, and limitations.

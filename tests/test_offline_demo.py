@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from alpha_demo.run import run_demo, verify
+from llm_alpha_mining.demo.run import run_demo, verify
 
 
 def test_relocated_demo_preserves_reproducibility_and_risk_veto(tmp_path: Path):

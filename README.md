@@ -2,91 +2,75 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-[![Portable framework tests](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml/badge.svg)](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml)
+[![Tests](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml/badge.svg)](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml)
 
-**An LLM-assisted factor research framework: from structured candidates to reproducible computation, evaluation, and research deliverables.**
+**A quantitative research framework that turns LLM proposals into constrained factor definitions, point-in-time signals, and reproducible research artifacts.**
 
-Language models propose and review research hypotheses. Deterministic code validates formulas, aligns data, computes factors, evaluates results, and records their provenance. Models cannot execute arbitrary Python, and external out-of-sample results must stay outside the search feedback loop.
+The central question is how to make automated factor discovery inspectable: which hypothesis was proposed, what data could it see, why was it accepted, and can its signal be reproduced? Language models propose and review candidates; deterministic code controls expression validity, risk vetoes, data alignment, evaluation, and provenance.
 
-This is a compact public edition of a research project, containing actual framework code and a synthetic-data demonstration. Market data, the original candidate pool, platform results, and research submissions remain in the private archive. The project does not train or fine-tune a foundation model.
+This repository contains the reusable framework developed during a quantitative research project. It includes an offline example, 251 automated tests, and English and Chinese documentation. Research data and individual factor submissions are kept outside the repository. This project uses language models for research assistance; it does not train a foundation model.
 
-## Quick start
+## Start here
 
-Use Python 3.12 or 3.13. Installation downloads Python dependencies; the demo then runs entirely offline, without an API key.
+Use Python 3.12 or 3.13. Installation downloads dependencies. The example runs offline with no API key.
 
 ```bash
 git clone https://github.com/ZebinZ/llm-alpha-mining.git
 cd llm-alpha-mining
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[test]'
+python -m pip install '.[test]'
 alpha-demo --output outputs/demo
 alpha-demo --output outputs/demo --verify
 python -m pytest -q
 ```
 
-On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. The demo requires a new output directory; use a different path, such as `outputs/demo-2`, for another run.
+On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`. Each demo run needs a new output directory; `--verify` checks an existing run.
 
-The demo uses scripted role responses and seeded synthetic data for 100 business days and 40 fictional stocks. Three candidates enter review, one receives a risk veto, and two are computed by the actual `FactorEngine`. An additional fictional index checks that non-stock instruments stay outside the stock cross-section. Missing values and rolling-window warm-up periods remain missing.
+The example generates 100 business days for 40 fictional stocks plus a fictional index. Scripted role responses propose three formulas; one receives a risk veto and two reach the real factor engine. It exercises missing observations, rolling-window warm-up, a changing trading universe, and exclusion of non-stock instruments.
 
-The output directory contains:
+Expected outcome: two accepted factors, zero network calls, and `PASS` from artifact verification. The output includes signal Parquet files, descriptive diagnostics, the call ledger, `report.json`, and a SHA-256 `manifest.json`. These are software checks on synthetic data, not evidence of investment performance.
 
-| File | Contents |
-| --- | --- |
-| `report.json` | Run summary, reproducibility signature, and demo scope |
-| `candidate_specs.json` | Candidate definitions bound to data, operators, and formula identities |
-| Two factor Parquet files | Float64 signal values |
-| `descriptive_metrics.parquet` | Daily descriptive correlations, coverage, and group diagnostics |
-| `factor_correlations.parquet` | Daily correlations between the two demo signals |
-| `llm_calls.jsonl` | Offline role-call and budget ledger |
-| `manifest.json` | SHA-256 hashes for artifact verification |
-
-These outputs verify software behavior. They do not establish that a real factor works, and they are not a formal backtest or an out-of-sample evaluation.
-
-## Research workflow
+## What the framework does
 
 ```mermaid
 flowchart LR
-    A[Mechanism hypotheses and allowed fields] --> B[Proposer candidates]
-    B --> C[DSL validation]
-    C --> D[Critic and Risk review]
-    D --> E[Arbiter and deterministic decision]
-    E --> F[Point-in-time data and factor computation]
-    F --> G[Time-based validation and cost evaluation]
-    G --> H[Deduplication, ranking, and artifact manifest]
-    H --> I[Independent platform evaluation]
-    I --> J[Freeze deliverables after user selection]
+    A[Research hypotheses] --> B[Structured LLM proposals]
+    B --> C[DSL validation and role review]
+    C --> D[Point-in-time factor computation]
+    D --> E[Temporal validation and cost evaluation]
+    E --> F[Selection and reproducible artifacts]
 ```
 
-The demo covers role review, formula computation, descriptive diagnostics, and artifact verification. Formal evaluation, portfolio construction, and multigeneration orchestration modules have separate synthetic tests. The demo does not contact an external platform or start a new research campaign.
+| Capability | Implementation | Evidence to inspect |
+| --- | --- | --- |
+| Structured proposal, critic, risk, and arbiter roles | [Mining protocols and LLM calls](src/llm_alpha_mining/mining/llm) | [Structured LLM tests](tests/test_structured_llm.py) |
+| Formula allowlists and restrictions on future information | [DSL interpreter](src/llm_alpha_mining/mining/dsl/interpreter.py) | [DSL tests](tests/test_safe_dsl.py) |
+| Separation of instrument identity, available history, and signal-time universe | [Factor engine](src/llm_alpha_mining/research/factors/engine.py) | [Factor contract tests](tests/test_factor_contracts.py) |
+| Labels, temporal splits, and factor evaluation | [Research evaluation](src/llm_alpha_mining/research/evaluation) | [Label and validation tests](tests/test_labels_and_validation.py), [evaluation tests](tests/test_evaluation.py) |
+| Portfolio constraints, turnover, costs, and execution timing | [Backtest engine](src/llm_alpha_mining/research/backtest/engine.py) | [Backtest tests](tests/test_backtest.py) |
+| Frozen candidate families and multiple-testing corrections | [Significance evaluation](src/llm_alpha_mining/research/robustness/significance.py) | [Significance tests](tests/test_significance.py) |
+| Budgets, restricted feedback, persistent state, and checkpoint recovery | [Campaign orchestration](src/llm_alpha_mining/mining/orchestration) | [Campaign tests](tests/test_multigeneration_campaign.py), [recovery tests](tests/test_resumable_generation_executor.py) |
 
-## Code map
+The example covers proposal review, signal computation, descriptive diagnostics, and artifact verification. Formal backtesting and campaign orchestration are tested separately. Connecting a real model and data source requires an integration runner; the example does not start a live mining campaign.
 
-| Module | Responsibility |
-| --- | --- |
-| `factor_production/v5/llm` | Structured protocols, role review, budgets, idempotent calls, and exact replay |
-| `factor_production/v5/dsl` | Abstract syntax tree allowlists, window and depth limits, future-field restrictions, and point-in-time operators |
-| `factor_production/v5/orchestration` | Candidate lineage, state transitions, SQLite persistence, checkpoint recovery, and stopping conditions |
-| `alpha_research/core`, `data` | Data contracts, snapshots, temporal semantics, quality checks, and hashes |
-| `alpha_research/factors` | Binding formulas to data versions and computing point-in-time factors |
-| `alpha_research/labels`, `validation`, `evaluation` | Label alignment, temporal splits, and factor evaluation |
-| `alpha_research/portfolio`, `costs`, `backtest` | Portfolio constraints, turnover and costs, and execution-aware backtests |
-| `alpha_research/agents` | Restricted HTTP adapters and bridges between protocol versions |
-| `alpha_demo` | Default demo entry point with synthetic data and scripted offline responses |
-| `tests` | Portable tests extracted from the research project and end-to-end demo checks |
+## Repository layout
 
-The directory names follow the original implementation. Package exports were reduced for the public edition; the retained scientific computation algorithms were preserved. Vendor-specific runners and historical approval-driven execution entry points are outside this release.
+```text
+src/llm_alpha_mining/
+  mining/       # Candidate protocols, LLM roles, DSL, state, and campaigns
+  research/     # Data contracts, factors, evaluation, portfolios, and backtests
+  demo/         # Reproducible example with synthetic data and scripted responses
+tests/          # Tests named by behavior and research component
+docs/           # Paired English and Chinese guides
+```
 
-## Problems addressed
+The current tree contains one maintained implementation. Historical research runners, vendor-specific panel repair tools, unused model-training branches, caches, and submission archives are excluded. Serialized schema and operator version identifiers remain explicit so old record identities retain their meaning.
 
-- Constraining free-form LLM output to verifiable research candidates, with deterministic enforcement of risk vetoes.
-- Separating instrument identity, the tradable universe at signal time, and historical observations to avoid cross-sectional contamination and unnecessary loss of history.
-- Connecting research results to data versions, formula identities, code, and artifact hashes for review and recovery.
-- Evaluating candidates with temporal validation and costs while keeping external out-of-sample results separate from search.
-- Supporting bulk recomputation after data corrections, correlation-based selection, and traceable submission packaging in the full private workflow. Its research data and performance figures are not published here.
+## Read further
 
-See [Architecture and design](docs/architecture.md), [Reproducibility and integration](docs/reproducibility.md), and [Project scope and status](docs/project_scope.md). Each document has a complete Chinese counterpart.
+- [Architecture and research decisions](docs/architecture.md): responsibilities, point-in-time semantics, missing data, and recovery.
+- [Reproducibility and integration](docs/reproducibility.md): running the example, using a model provider, bringing your own data, and development checks.
+- [Research scope and evidence](docs/project_scope.md): what this project demonstrates, what the private research established, and what remains unverified.
 
-## From the demo to your own research
-
-Run the offline example first, then follow the [integration guide](docs/reproducibility.md) to build a runner for your own data source and model provider. The repository preserves components for automated factor research, while the public demo uses scripted model responses. It does not start live trading or provide automatic access to the original project's private data.
+The source is publicly readable. An open-source license has not yet been specified; see [publication scope](docs/project_scope.md#publication-and-reuse).

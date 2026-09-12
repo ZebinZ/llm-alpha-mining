@@ -4,25 +4,39 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-alpha-mining"
-version = "0.1.0"
-description = "Auditable LLM-assisted factor research with an offline synthetic demonstration"
+version = "0.2.0"
+description = "Structured LLM factor discovery with point-in-time evaluation and reproducible artifacts"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-  "cryptography>=45,<47", "numpy>=2.2,<3", "pandas>=2.3,<3",
-  "psutil>=7,<8", "pyarrow>=21,<24", "scikit-learn>=1.7,<2", "scipy>=1.14,<2",
+authors = [{name = "ZebinZ"}]
+keywords = ["quantitative-research", "alpha-factors", "llm", "reproducibility"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
 ]
+dependencies = [
+  "numpy>=2.2,<3", "pandas>=2.3,<3", "pyarrow>=21,<24", "scipy>=1.14,<2",
+]
+
+[project.urls]
+Repository = "https://github.com/ZebinZ/llm-alpha-mining"
+Documentation = "https://github.com/ZebinZ/llm-alpha-mining#readme"
+Issues = "https://github.com/ZebinZ/llm-alpha-mining/issues"
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9"]
 
 [project.scripts]
-alpha-demo = "alpha_demo.run:main"
+alpha-demo = "llm_alpha_mining.demo.run:main"
+alpha-workspace = "llm_alpha_mining.mining.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["alpha_demo*", "alpha_research*", "factor_eval_minute*", "factor_production*"]
+where = ["src"]
+include = ["llm_alpha_mining*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers"
-pythonpath = ["."]
+addopts = "--strict-markers --import-mode=importlib"
