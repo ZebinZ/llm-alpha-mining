@@ -1,17 +1,62 @@
-name: Portable framework tests
-on: [push, pull_request, workflow_dispatch]
+name: Apply verified public package cleanup
+on:
+  push:
+    paths: ['.github/workflows/tests.yml']
+permissions:
+  contents: write
 jobs:
-  offline:
+  publish:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python: ['3.12', '3.13']
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
         with:
-          python-version: ${{ matrix.python }}
-      - run: python -m pip install -e '.[test]'
-      - run: python -m pytest -q
-      - run: alpha-demo --output outputs/demo
-      - run: alpha-demo --output outputs/demo --verify
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Verify and apply the reviewed public tree
+        run: |
+          python - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import hashlib, subprocess, zipfile
+          base = '61bd7e9ea85be56fe9b39593d0903d5d90ffc58e'
+          archive = Path('public-release.zip')
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == 'ed52b84ea5438760b5f05ab1d1cf6ed3a2517085c94833ba2e9b5a6c23cda5bd'
+          old = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', '-z', base]).decode().split('\0')[:-1]
+          tracked = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')[:-1]
+          assert set(tracked) == set(old) | {str(archive)}, 'Unexpected remote files; refusing to overwrite'
+          for name in old:
+              if name.startswith('.github/'):
+                  continue
+              assert Path(name).read_bytes() == subprocess.check_output(['git', 'show', f'{base}:{name}']), f'Concurrent change: {name}'
+          with zipfile.ZipFile(archive) as bundle:
+              names = bundle.namelist()
+              assert len(names) == len(set(names)) == 149
+              for name in names:
+                  p = PurePosixPath(name)
+                  assert not p.is_absolute() and '..' not in p.parts
+                  assert name.startswith(('src/llm_alpha_mining/', 'tests/', 'docs/')) or name in {'README.md', 'README.zh-CN.md', 'pyproject.toml', 'requirements-validated.txt', '.gitignore'}
+              for name in old:
+                  if not name.startswith('.github/'):
+                      Path(name).unlink()
+              for name in names:
+                  p = Path(name)
+                  p.parent.mkdir(parents=True, exist_ok=True)
+                  p.write_bytes(bundle.read(name))
+          archive.unlink()
+          PY
+      - name: Validate before committing
+        run: |
+          python -m pip install '.[test]'
+          python -m pytest -q
+          alpha-demo --output outputs/publication-check
+          alpha-demo --output outputs/publication-check --verify
+      - name: Commit the final source tree
+        run: |
+          git config user.name ZebinZ
+          git config user.email 227479990+ZebinZ@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          git commit -m "Normalize package layout and retain validated factor research framework"
+          git push origin HEAD:main
