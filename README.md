@@ -1,18 +1,22 @@
 # LLM Alpha Mining
 
+**English** | [简体中文](README.zh-CN.md)
+
 [![Portable framework tests](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml/badge.svg)](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml)
 
-**LLM 辅助的因子研究框架：从结构化候选到可复现的计算、评估和交付。**
+**An LLM-assisted factor research framework: from structured candidates to reproducible computation, evaluation, and research deliverables.**
 
-该项目把语言模型用于提出和审查研究假设，由确定性的代码负责公式校验、数据对齐、因子计算、评估和审计。模型不能直接执行任意 Python，也不能把外部样本外成绩反馈进搜索流程。
+Language models propose and review research hypotheses. Deterministic code validates formulas, aligns data, computes factors, evaluates results, and records their provenance. Models cannot execute arbitrary Python, and external out-of-sample results must stay outside the search feedback loop.
 
-这是研究项目的精简展示版本，包含实际框架源码和合成数据演示。原项目的市场数据、具体候选池、平台结果及交付文件单独保存在本地。没有训练或微调基础大模型。
+This is a compact public edition of a research project, containing actual framework code and a synthetic-data demonstration. Market data, the original candidate pool, platform results, and research submissions remain in the private archive. The project does not train or fine-tune a foundation model.
 
-## 五分钟运行
+## Quick start
 
-需要 Python 3.12 或 3.13。首次安装需要下载 Python 依赖，之后示例完全离线，不需要 API Key。
+Use Python 3.12 or 3.13. Installation downloads Python dependencies; the demo then runs entirely offline, without an API key.
 
 ```bash
+git clone https://github.com/ZebinZ/llm-alpha-mining.git
+cd llm-alpha-mining
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[test]'
@@ -21,68 +25,68 @@ alpha-demo --output outputs/demo --verify
 python -m pytest -q
 ```
 
-Windows PowerShell 用 `.venv\Scripts\Activate.ps1` 激活环境。输出目录须为新目录，重复演示可改为 `outputs/demo-2`。
+On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. The demo requires a new output directory; use a different path, such as `outputs/demo-2`, for another run.
 
-示例使用固定的角色回复和随机种子生成的 100 日、40 只虚拟股票数据：3 个候选进入审查，风险否决 1 个，剩余 2 个通过真实 `FactorEngine` 计算。另放入一个虚拟指数，验证它不会进入股票横截面；缺失值及滚动预热期保留为缺失。
+The demo uses scripted role responses and seeded synthetic data for 100 business days and 40 fictional stocks. Three candidates enter review, one receives a risk veto, and two are computed by the actual `FactorEngine`. An additional fictional index checks that non-stock instruments stay outside the stock cross-section. Missing values and rolling-window warm-up periods remain missing.
 
-结果保存在输出目录：
+The output directory contains:
 
-| 文件 | 内容 |
+| File | Contents |
 | --- | --- |
-| `report.json` | 运行摘要、可复现签名和演示范围 |
-| `candidate_specs.json` | 绑定数据、算子和公式身份的定义 |
-| 两份因子 Parquet | float64 信号值 |
-| `descriptive_metrics.parquet` | 逐日描述性相关、覆盖和分组诊断 |
-| `factor_correlations.parquet` | 两个演示信号的逐日相关性 |
-| `llm_calls.jsonl` | 离线角色调用及预算账本 |
-| `manifest.json` | 文件 SHA-256，供完整性校验 |
+| `report.json` | Run summary, reproducibility signature, and demo scope |
+| `candidate_specs.json` | Candidate definitions bound to data, operators, and formula identities |
+| Two factor Parquet files | Float64 signal values |
+| `descriptive_metrics.parquet` | Daily descriptive correlations, coverage, and group diagnostics |
+| `factor_correlations.parquet` | Daily correlations between the two demo signals |
+| `llm_calls.jsonl` | Offline role-call and budget ledger |
+| `manifest.json` | SHA-256 hashes for artifact verification |
 
-这些数字用于验证软件流程，不能说明真实因子有效，也不构成正式回测或样本外检验。
+These outputs verify software behavior. They do not establish that a real factor works, and they are not a formal backtest or an out-of-sample evaluation.
 
-## 研究流程
+## Research workflow
 
 ```mermaid
 flowchart LR
-    A[机制假设与允许字段] --> B[Proposer 候选]
-    B --> C[DSL 静态校验]
-    C --> D[Critic / Risk 审查]
-    D --> E[Arbiter 与确定性裁决]
-    E --> F[PIT 数据与因子计算]
-    F --> G[时间验证与成本评估]
-    G --> H[去重、排序与工件清单]
-    H --> I[独立平台检验]
-    I --> J[用户选定后冻结交付]
+    A[Mechanism hypotheses and allowed fields] --> B[Proposer candidates]
+    B --> C[DSL validation]
+    C --> D[Critic and Risk review]
+    D --> E[Arbiter and deterministic decision]
+    E --> F[Point-in-time data and factor computation]
+    F --> G[Time-based validation and cost evaluation]
+    G --> H[Deduplication, ranking, and artifact manifest]
+    H --> I[Independent platform evaluation]
+    I --> J[Freeze deliverables after user selection]
 ```
 
-演示覆盖角色审查、公式计算、描述性诊断和工件验证。正式评估、组合及多代调度模块由独立合成测试验证；演示不会自动调用外部平台或运行新的研究队列。
+The demo covers role review, formula computation, descriptive diagnostics, and artifact verification. Formal evaluation, portfolio construction, and multigeneration orchestration modules have separate synthetic tests. The demo does not contact an external platform or start a new research campaign.
 
-## 代码导航
+## Code map
 
-| 模块 | 负责什么 |
+| Module | Responsibility |
 | --- | --- |
-| `factor_production/v5/llm` | 结构化协议、角色审查、预算、幂等调用、精确回放 |
-| `factor_production/v5/dsl` | AST 白名单、窗口和深度限制、禁止未来字段、PIT 算子 |
-| `factor_production/v5/orchestration` | 候选谱系、状态迁移、SQLite、断点恢复和停止条件 |
-| `alpha_research/core`、`data` | 数据契约、快照、时间语义、质量检查和哈希 |
-| `alpha_research/factors` | 公式与数据版本绑定、PIT 因子引擎 |
-| `alpha_research/labels`、`validation`、`evaluation` | 标签对齐、时间切分、因子评估 |
-| `alpha_research/portfolio`、`costs`、`backtest` | 组合约束、换手与成本、执行时点回测 |
-| `alpha_research/agents` | 通用受限 HTTP 适配器和新旧协议桥接 |
-| `alpha_demo` | 唯一默认演示入口，使用合成数据和离线回复 |
-| `tests` | 从实际项目抽取的可移植测试及端到端演示验收 |
+| `factor_production/v5/llm` | Structured protocols, role review, budgets, idempotent calls, and exact replay |
+| `factor_production/v5/dsl` | Abstract syntax tree allowlists, window and depth limits, future-field restrictions, and point-in-time operators |
+| `factor_production/v5/orchestration` | Candidate lineage, state transitions, SQLite persistence, checkpoint recovery, and stopping conditions |
+| `alpha_research/core`, `data` | Data contracts, snapshots, temporal semantics, quality checks, and hashes |
+| `alpha_research/factors` | Binding formulas to data versions and computing point-in-time factors |
+| `alpha_research/labels`, `validation`, `evaluation` | Label alignment, temporal splits, and factor evaluation |
+| `alpha_research/portfolio`, `costs`, `backtest` | Portfolio constraints, turnover and costs, and execution-aware backtests |
+| `alpha_research/agents` | Restricted HTTP adapters and bridges between protocol versions |
+| `alpha_demo` | Default demo entry point with synthetic data and scripted offline responses |
+| `tests` | Portable tests extracted from the research project and end-to-end demo checks |
 
-框架目录保留原有命名，以便对照原始实现。展示版精简了包的导出入口，未修改被保留的科学计算算法。数据供应商专用运行器和历史审批执行入口不属于这个发布版本。
+The directory names follow the original implementation. Package exports were reduced for the public edition; the retained scientific computation algorithms were preserved. Vendor-specific runners and historical approval-driven execution entry points are outside this release.
 
-## 项目中解决的问题
+## Problems addressed
 
-- 把 LLM 的自由文本约束为可验证的研究候选，风险否决具有确定性约束。
-- 把股票身份、当日可交易范围与历史观察范围分开，防止横截面污染和不必要的历史损失。
-- 用数据版本、公式身份、代码和工件哈希连接研究结果，支持复核与恢复。
-- 用时间验证和成本评估筛选候选，保持外部样本外结果与搜索隔离。
-- 在完整私有流程中完成数据修正后的批量重算、相关性筛选和上传工件打包；具体研究数据和成果指标不随展示代码发布。
+- Constraining free-form LLM output to verifiable research candidates, with deterministic enforcement of risk vetoes.
+- Separating instrument identity, the tradable universe at signal time, and historical observations to avoid cross-sectional contamination and unnecessary loss of history.
+- Connecting research results to data versions, formula identities, code, and artifact hashes for review and recovery.
+- Evaluating candidates with temporal validation and costs while keeping external out-of-sample results separate from search.
+- Supporting bulk recomputation after data corrections, correlation-based selection, and traceable submission packaging in the full private workflow. Its research data and performance figures are not published here.
 
-详见 [架构与设计](docs/architecture.md)、[复现与接入](docs/reproducibility.md)、[项目范围与后续](docs/project_scope.md)。
+See [Architecture and design](docs/architecture.md), [Reproducibility and integration](docs/reproducibility.md), and [Project scope and status](docs/project_scope.md). Each document has a complete Chinese counterpart.
 
----
+## From the demo to your own research
 
-**English:** An auditable LLM-assisted factor research framework. The offline demo runs the actual structured panel, point-in-time factor engine, descriptive diagnostics and artifact verification on synthetic data. It uses scripted model replies, makes no network calls, and makes no claim about investment performance. See the documents above for module boundaries and reproduction instructions.
+Run the offline example first, then follow the [integration guide](docs/reproducibility.md) to build a runner for your own data source and model provider. The repository preserves components for automated factor research, while the public demo uses scripted model responses. It does not start live trading or provide automatic access to the original project's private data.
