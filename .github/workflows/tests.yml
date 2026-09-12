@@ -1,0 +1,34 @@
+name: Import prepared framework
+on: [push]
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore verified public source archive
+        run: |
+          python - <<'PYCODE'
+          from pathlib import Path
+          import hashlib, zipfile
+          archive = Path('framework-source.zip')
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == 'a2b313b6a6983b168e6e47a290e937f0a2313efd35f9d6239ff51a26f91ed094'
+          with zipfile.ZipFile(archive) as z:
+              names = z.namelist()
+              assert len(names) == 222 and len(set(names)) == 222
+              for name in names:
+                  path = Path(name)
+                  assert not path.is_absolute() and '..' not in path.parts
+                  assert path.parts[0] not in ('.git', '.github')
+                  path.parent.mkdir(parents=True, exist_ok=True)
+                  path.write_bytes(z.read(name))
+          archive.unlink()
+          PYCODE
+      - name: Commit imported source
+        run: |
+          git config user.name 'ZebinZ'
+          git config user.email '227479990+ZebinZ@users.noreply.github.com'
+          git add -A
+          git commit -m 'Import verified portable factor research framework'
+          git push origin HEAD:main
