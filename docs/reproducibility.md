@@ -1,35 +1,37 @@
-# 复现与接入
+# Reproducibility and integration
 
-## 离线复现
+**English** | [简体中文](reproducibility.zh-CN.md) · [Back to README](../README.md)
 
-README 的安装和运行命令是维护入口。相同软件环境与随机种子下，两次新输出目录的 `report.json` 应具有相同 `scientific_signature`。调用账本包含运行时间，因此不要求整个目录逐字节相同。
+## Reproduce the offline demo
 
-`requirements-validated.txt` 记录本次本地验收使用的直接依赖版本，并不是包含所有间接依赖和哈希的锁文件。CI 使用 Python 3.12、3.13 和项目声明的兼容依赖范围；CI 只有实际运行之后才算通过。
+The [README](../README.md) contains the maintained installation and run commands. With the same software environment and random seed, two runs into new output directories should produce the same `scientific_signature` in `report.json`. The call ledger includes timestamps, so the complete directories are not expected to be identical byte for byte.
 
-可以不安装命令行入口，直接运行：
+`requirements-validated.txt` records the direct dependency versions used for local acceptance. It is not a complete lockfile with all transitive dependencies and hashes. CI uses Python 3.12 and 3.13 with the compatible dependency ranges declared by the project. The published version passed 251 tests, the demo, and hash verification on each Python version; check [GitHub Actions](https://github.com/ZebinZ/llm-alpha-mining/actions/workflows/tests.yml) for the latest status.
+
+You can also run the module directly without installing the command-line entry point, provided the required dependencies are available and you are in the repository root:
 
 ```bash
 python -m alpha_demo.run --output outputs/another-demo
 python -m alpha_demo.run --output outputs/another-demo --verify
 ```
 
-## 接入真实模型
+## Connect a real model
 
-离线入口明确使用 `FakeTransport`。若要真实调用，可在自己的运行器中构造 `LiveProviderConfig` 和 `LiveStructuredTransport`，再传给 `StructuredCallExecutor`。配置需要 HTTPS 域名允许列表、环境变量名、供应商模型标识及成本和响应大小限制；具体字段见 `alpha_research/agents/live_transport.py`。
+The offline entry point explicitly uses `FakeTransport`. For live calls, construct `LiveProviderConfig` and `LiveStructuredTransport` in your own runner, then pass the transport to `StructuredCallExecutor`. Configuration includes an HTTPS host allowlist, environment-variable names, a provider model identifier, and limits on cost and response size. See [`alpha_research/agents/live_transport.py`](../alpha_research/agents/live_transport.py) for the actual fields.
 
-真实 API 的兼容性、当前可用模型和价格需在接入时确认。示例中的假模型标识和模拟计费不可用于真实服务。配置密钥时仅使用环境变量，不把密钥写进候选、日志或仓库。
+Confirm API compatibility, available models, and current pricing when integrating a provider. The demo's fictional model identifiers and simulated billing are not live-service configuration. Supply credentials through environment variables; do not put keys in candidate definitions, logs, or the repository.
 
-## 接入研究数据
+## Connect research data
 
-1. 创建数据 schema、频率、可用时间规则和不可变快照。
-2. 从自己的合法数据来源实现适配器或构造 `DataBatch`。
-3. 提供股票身份、状态变更、交易范围与数据可知时间。
-4. 将候选绑定到数据及算子注册表后计算，保留预热期和缺失值。
-5. 冻结标签、时间验证、成本和筛选规则后运行正式评估。
-6. 导出工件及哈希；独立检验完成后再确定最终交付。
+1. Define the data schema, frequency, availability rules, and an immutable snapshot.
+2. Implement an adapter or construct `DataBatch` objects from a data source you are authorized to use.
+3. Supply instrument identity, status changes, trading-universe information, and data availability times.
+4. Bind candidates to the data and operator registry before computing them; preserve warm-up periods and missing values.
+5. Freeze labels, temporal validation, costs, and selection rules before formal evaluation.
+6. Export artifacts and hashes, then determine final deliverables after independent evaluation.
 
-演示里虚拟数据的完整性声明只适用于生成的 fixture，不能复制为真实供应商数据已被验证的证明。
+Completeness assertions for the demo's fictional data apply only to the generated fixtures. They are not evidence that a real vendor's data has been validated.
 
-## 恢复原研究
+## Restore the original research
 
-公开仓库可重现框架行为和演示，不能单独重现私有数据上的全部结果。恢复原研究需要另行取得私有归档中的冻结目录、数据契约、面板、公式、运行回执和版本说明，并核对 SHA。不要把新的实验直接写进旧的冻结输出目录。
+The public repository reproduces framework behavior and the demo. It cannot reproduce every private-data result on its own. Restoring the original research additionally requires the frozen catalogs, data contracts, panels, formulas, run receipts, and version notes in the private archive, with their hashes verified. New experiments should write to new output directories rather than overwrite frozen results.

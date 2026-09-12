@@ -1,22 +1,24 @@
-# 项目范围与后续
+# Project scope and status
 
-本次整理将长期保留的框架与一次研究的运行产物分开。框架包含候选提议和审查、数据与因子契约、计算、时间验证、组合成本评估及可恢复调度；供应商接口配置、实际因子目录和平台记录留在私有研究归档。
+**English** | [简体中文](project_scope.zh-CN.md) · [Back to README](../README.md)
 
-## 当前能够展示的内容
+This is a compact public edition of an LLM-assisted automated factor research framework. It separates the reusable framework from the outputs of one research campaign. The framework includes candidate proposal and review, data and factor contracts, computation, temporal validation, portfolio and cost evaluation, and recoverable orchestration. Vendor configuration, actual factor catalogs, and platform records remain in the private research archive.
 
-- 真实框架组件及其可移植合成测试。
-- 完整的离线演示，从结构化候选到值文件、描述性诊断和 SHA 验收。
-- 缺失值、PIT 股票范围、风险否决、预算及重试、谱系和断点恢复等工程约束。
-- 原研究中批量重算与可追溯交付的方法说明。
+## What this repository demonstrates
 
-## 研究状态
+- Actual framework components and their portable synthetic tests.
+- An offline workflow from structured candidates to signal files, descriptive diagnostics, and SHA verification.
+- Engineering constraints for missing values, point-in-time stock universes, risk vetoes, budgets and retries, lineage, and checkpoint recovery.
+- Documentation of bulk recomputation and traceable research delivery in the original project.
 
-本地重算与上传文件准备已经完成，外部平台复测及本批最终交付仍待用户反馈。公开版本不包含未经确认的样本外成绩，不把候选数量等同于有效因子数量。阶段结束后不自动启动新一轮挖掘。
+## Research status
 
-后续可从现有接口继续接入数据和模型、改进搜索或执行效率。恢复研究时应新建实验身份，沿用必要的历史谱系与契约，重新验证运行环境。
+Local recomputation and preparation of upload files are complete. External platform retesting and the current batch's final delivery await feedback from the project owner. The public edition does not include unconfirmed out-of-sample performance, and candidate counts are not evidence of effective factors. Closing this research phase does not automatically start a new mining campaign.
 
-## 发布说明
+Future work can build on the existing interfaces to connect data and models or improve search and execution efficiency. Resumed research should use a new experiment identity, retain necessary lineage and contracts, and revalidate the runtime environment.
 
-框架仓库为 [ZebinZ/llm-alpha-mining](https://github.com/ZebinZ/llm-alpha-mining)，公开展示源码、合成示例和测试。框架发布与平台复测、最终 OOS 交付分别推进；实际研究结果后续再补充。
+## Publication
 
-本仓库暂未指定开源许可证。市场数据、具体因子池、平台记录和私有研究归档保留在本地，不属于公开仓库。
+[ZebinZ/llm-alpha-mining](https://github.com/ZebinZ/llm-alpha-mining) publishes framework source code, a synthetic example, and tests. Framework publication proceeds independently of platform retesting and final out-of-sample (OOS) delivery. Any research results added later must reflect completed verification.
+
+No open-source license has been specified yet. Market data, the specific factor pool, platform records, and private research archives are kept locally and are outside this repository.
