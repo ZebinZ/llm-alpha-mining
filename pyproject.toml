@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=80,<81", "wheel>=0.45,<0.47"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-alpha-mining"
+version = "0.1.0"
+description = "Auditable LLM-assisted factor research with an offline synthetic demonstration"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "cryptography>=45,<47", "numpy>=2.2,<3", "pandas>=2.3,<3",
+  "psutil>=7,<8", "pyarrow>=21,<24", "scikit-learn>=1.7,<2", "scipy>=1.14,<2",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+
+[project.scripts]
+alpha-demo = "alpha_demo.run:main"
+
+[tool.setuptools.packages.find]
+include = ["alpha_demo*", "alpha_research*", "factor_eval_minute*", "factor_production*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+pythonpath = ["."]
